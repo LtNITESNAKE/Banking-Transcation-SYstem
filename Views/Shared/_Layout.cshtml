@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Banking System</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @{
+        var fullName = Context.Session.GetString("FullName") ?? "Guest";
+        var role = Context.Session.GetString("Role") ?? "Customer";
+        var initials = string.Join("", fullName.Split(' ').Select(w => w[0]));
+    }
+
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <i class="bi bi-bank2 fs-3 me-2"></i>
+                <span class="fs-4 fw-bold">BankSys</span>
+            </div>
+            
+            <ul class="sidebar-nav">
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "")" asp-controller="Home" asp-action="Index">
+                        Dashboard
+                    </a>
+                </li>
+                
+                @if (role == "Admin")
+                {
+                    <li class="nav-item">
+                        <a class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Customer" ? "active" : "")" asp-controller="Customer" asp-action="Index">
+                            Customers
+                        </a>
+                    </li>
+                }
+
+                <li class="nav-item mt-3 mb-1 px-3" style="font-size: 0.75rem; letter-spacing: 0.05em; color: #a5b4fc; text-transform: uppercase; font-weight: 600;">
+                    Transactions
+                </li>
+                
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Deposit" ? "active" : "")" asp-controller="Transaction" asp-action="Deposit">
+                        Deposit
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Withdraw" ? "active" : "")" asp-controller="Transaction" asp-action="Withdraw">
+                        Withdraw
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "Transfer" ? "active" : "")" asp-controller="Transaction" asp-action="Transfer">
+                        Transfer
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link @(ViewContext.RouteData.Values["Action"]?.ToString() == "History" ? "active" : "")" asp-controller="Transaction" asp-action="History">
+                        History
+                    </a>
+                </li>
+            </ul>
+
+            <div class="sidebar-footer">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="user-avatar me-2">
+                        <span>@initials</span>
+                    </div>
+                    <div class="user-info">
+                        <div class="fw-bold fs-6">@fullName</div>
+                        <div style="font-size: 0.8rem; color: #a5b4fc;">@role</div>
+                    </div>
+                </div>
+                <a asp-controller="Account" asp-action="Logout" class="text-white text-decoration-none fs-7 ms-1" style="font-size: 0.85rem;">
+                    Sign Out
+                </a>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

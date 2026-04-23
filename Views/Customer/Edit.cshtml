@@ -1,0 +1,55 @@
+@model Banking_Transcation_System.Models.AccountViewModel
+@{
+    ViewData["Title"] = "Edit Account";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body p-4">
+                <h3 class="fw-bold text-center mb-1">Edit Account</h3>
+                <p class="text-center text-muted mb-4">Modify the account details below.</p>
+
+                <form asp-action="Edit" method="post">
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="CustomerId" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Customer Name</label>
+                        <input asp-for="CustomerName" class="form-control" readonly />
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <label asp-for="AccountNumber" class="form-label fw-bold">Account Number</label>
+                            <input asp-for="AccountNumber" class="form-control" readonly />
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="AccountType" class="form-label fw-bold">Account Type</label>
+                            <select asp-for="AccountType" class="form-select">
+                                <option value="Savings">Savings</option>
+                                <option value="Checking">Checking</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Balance" class="form-label fw-bold">Balance (PKR)</label>
+                        <input asp-for="Balance" class="form-control" readonly />
+                        <small class="text-muted">Balance can only be changed via transactions.</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary px-4">Back</a>
+                        <button type="submit" class="btn btn-primary px-4">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

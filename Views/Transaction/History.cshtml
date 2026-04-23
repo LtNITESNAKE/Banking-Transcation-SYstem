@@ -1,0 +1,65 @@
+@model Banking_Transcation_System.Models.TransactionFilterViewModel
+@{
+    ViewData["Title"] = "Transaction History";
+}
+
+<div class="page-header">
+    <h2 class="page-title">Transaction History</h2>
+    <form asp-action="History" method="get" class="d-flex align-items-center gap-2">
+        <input asp-for="AccountNumber" class="form-control" style="width: 220px;" placeholder="Filter by Account #..." />
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a asp-action="History" class="btn btn-secondary">Clear</a>
+    </form>
+</div>
+
+<div class="card">
+    <div class="card-body p-0">
+        <table class="table mb-0">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Account</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Remarks</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Transactions != null && Model.Transactions.Any())
+                {
+                    foreach (var item in Model.Transactions)
+                    {
+                        <tr>
+                            <td>@item.TransactionDate.ToString("yyyy-MM-dd HH:mm")</td>
+                            <td class="fw-bold">@item.AccountNumber</td>
+                            <td>
+                                @if (item.TransactionType == "Deposit")
+                                {
+                                    <span class="badge" style="background-color:#23C16B;">Deposit</span>
+                                }
+                                else if (item.TransactionType == "Withdrawal")
+                                {
+                                    <span class="badge" style="background-color:#000000;">Withdrawal</span>
+                                }
+                                else
+                                {
+                                    <span class="badge" style="background-color:#6B4EFF;">Transfer</span>
+                                }
+                            </td>
+                            <td class="fw-bold" style="color: @(item.TransactionType == "Deposit" ? "#23C16B" : item.TransactionType == "Withdrawal" ? "#000000" : "#6B4EFF")">
+                                @(item.TransactionType == "Withdrawal" ? "-" : "+")PKR @item.Amount.ToString("N2")
+                            </td>
+                            <td class="text-muted">@item.Remarks</td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td colspan="5" class="text-center py-5 text-muted">No transactions found.</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

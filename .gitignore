@@ -1,0 +1,103 @@
+# Build results
+bin/
+obj/
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+[Rr]eleases/
+x64/
+x86/
+[Ww][Ii][Nn]32/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio cache/options directory
+.vs/
+
+# Visual Studio Code
+.vscode/
+*.code-workspace
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Local user settings
+appsettings.Development.json
+appsettings.json
+
+# NuGet
+*.nupkg
+*.snupkg
+.nuget/
+
+# Entity Framework
+*.edmx
+*.edmx.diagram
+
+# Runtime
+*.pdb
+
+# Test Results
+TestResults/
+*.trx
+
+# ASP.NET Core
+Properties/launchSettings.json
+
+# Rider
+.idea/
+*.sln.iml
+*.iml
+
+# VS Code settings
+settings.json
+launch.json
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*~
+
+# npm (if using node packages)
+node_modules/
+package-lock.json
+
+# Node
+npm-debug.log
+yarn-error.log
+
+# Misc
+*.log
+*.log.*
+.env
+.env.local
+
+# Static web assets build output
+wwwroot/lib/
+.staticwebassets*
+
+# Session files
+*.session
+BankingDatabase_Simplified.sql
+DATABASE_SETUP_GUIDE_SIMPLIFIED.md
+INTEGRATION_GUIDE.md
+DATABASE_DESIGN_DOCUMENTATION.md

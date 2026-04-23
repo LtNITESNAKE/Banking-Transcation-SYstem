@@ -1,0 +1,46 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    var fullName = Context.Session.GetString("FullName") ?? "Guest";
+    var role = Context.Session.GetString("Role") ?? "Customer";
+}
+
+<div class="welcome-card">
+    <h2>Welcome back, @fullName!</h2>
+    <p class="mb-0" style="opacity:0.85;">
+        You are securely logged into the Banking Transaction System. Use the sidebar menu to navigate
+        through your modules, manage accounts, make deposits, withdrawals, and transfers.
+    </p>
+</div>
+
+<div class="row">
+    @if (role == "Admin")
+    {
+        <div class="col-md-4 mb-3">
+            <div class="card text-center p-4">
+                <div style="font-size: 2.5rem; color: #6B4EFF;">
+                    <i class="bi bi-people-fill"></i>
+                </div>
+                <h5 class="mt-2 fw-bold">3</h5>
+                <p class="text-muted mb-0">Total Customers</p>
+            </div>
+        </div>
+    }
+    <div class="col-md-4 mb-3">
+        <div class="card text-center p-4">
+            <div style="font-size: 2.5rem; color: #23C16B;">
+                <i class="bi bi-wallet-fill"></i>
+            </div>
+            <h5 class="mt-2 fw-bold">PKR 14,950.50</h5>
+            <p class="text-muted mb-0">Total Balance</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="card text-center p-4">
+            <div style="font-size: 2.5rem; color: #FFB323;">
+                <i class="bi bi-arrow-left-right"></i>
+            </div>
+            <h5 class="mt-2 fw-bold">3</h5>
+            <p class="text-muted mb-0">Total Transactions</p>
+        </div>
+    </div>
+</div>
