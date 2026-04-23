@@ -1,10 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Banking_Transcation_System.Models;
+using Microsoft.Data.SqlClient;
+using System.Data;
 
 namespace Banking_Transcation_System.Controllers;
 
 public class AccountController : Controller
 {
+    private readonly string _connectionString;
+
+    public AccountController(IConfiguration configuration)
+    {
+        _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
+    }
+
     [HttpGet]
     public IActionResult Login()
     {
@@ -16,34 +25,41 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            //todo - Replace with database authentication later
+            try
+            {
+                using (SqlConnection con = new SqlConnection(_connectionString))
+                {
+                    using (SqlCommand cmd = new SqlCommand("sp_UserLogin", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@Username", model.Username);
+                        cmd.Parameters.AddWithValue("@Password", model.Password);
 
-            // Hardcoded Admin
-            if (model.Username == "Mujtaba" && model.Password == "1581810")
-            {
-                HttpContext.Session.SetString("Username", "Mujtaba");
-                HttpContext.Session.SetString("FullName", "Muhammad Mujtaba");
-                HttpContext.Session.SetString("Role", "Admin");
-                return RedirectToAction("Index", "Home");
+                        con.Open();
+                        using (SqlDataReader reader = cmd.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                string role = reader["Role"].ToString();
+                                string fullName = reader["FullName"].ToString();
+
+                                HttpContext.Session.SetString("Username", model.Username);
+                                HttpContext.Session.SetString("FullName", fullName);
+                                HttpContext.Session.SetString("Role", role);
+
+                                return RedirectToAction("Index", "Home");
+                            }
+                            else
+                            {
+                                ModelState.AddModelError("", "Invalid username or password.");
+                            }
+                        }
+                    }
+                }
             }
-            // Hardcoded Customers for demo
-            else if (model.Username == "awais" && model.Password == "1234")
+            catch (Exception ex)
             {
-                HttpContext.Session.SetString("Username", "awais");
-                HttpContext.Session.SetString("FullName", "Sheikh Awais");
-                HttpContext.Session.SetString("Role", "Customer");
-                return RedirectToAction("Index", "Home");
-            }
-            else if (model.Username == "hadian" && model.Password == "1234")
-            {
-                HttpContext.Session.SetString("Username", "hadian");
-                HttpContext.Session.SetString("FullName", "Hadian Arshad");
-                HttpContext.Session.SetString("Role", "Customer");
-                return RedirectToAction("Index", "Home");
-            }
-            else
-            {
-                ModelState.AddModelError("", "Invalid username or password.");
+                ModelState.AddModelError("", "Database connection error: " + ex.Message);
             }
         }
         return View(model);
@@ -60,9 +76,89 @@ public class AccountController : Controller
     {
         if (ModelState.IsValid)
         {
-            //todo - Save user to database
+            try
+            {
+                string[] nameParts = model.FullName.Split(' ', 2);
+                string firstName = nameParts[0];
+                string lastName = nameParts.Length > 1 ? nameParts[1] : "";
 
-            return RedirectToAction("Login");
+                using (SqlConnection con = new SqlConnection(_connectionString))
+                {
+                    con.Open();
+                    using (SqlCommand cmd = new SqlCommand("sp_CreateUser", con))
+                    {
+                        cmd.CommandType = CommandType.StoredProcedure;
+                        cmd.Parameters.AddWithValue("@Username", model.Username);
+                        cmd.Parameters.AddWithValue("@Password", model.Password);
+                        cmd.Parameters.AddWithValue("@FullName", model.FullName);
+                        cmd.Parameters.AddWithValue("@FirstName", firstName);
+                        cmd.Parameters.AddWithValue("@LastName", lastName);
+                        cmd.Parameters.AddWithValue("@Email", model.Email ?? "");
+                        cmd.Parameters.AddWithValue("@PhoneNumber", model.PhoneNumber ?? "");
+                        cmd.Parameters.AddWithValue("@Address", model.Address ?? "");
+                        cmd.ExecuteNonQuery();
+                    }
+
+                    int customerId = 0;
+                    using (SqlCommand cmd = new SqlCommand("SELECT c.CustomerId FROM Customers c JOIN Users u ON c.UserId = u.UserId WHERE u.Username = @Username", con))
+                    {
+                        cmd.Parameters.AddWithValue("@Username", model.Username);
+                        object result = cmd.ExecuteScalar();
+                        if (result != null) customerId = Convert.ToInt32(result);
+                    }
+
+                    if (customerId > 0)
+                    {
+                        int accountId = 0;
+                        using (SqlCommand cmd = new SqlCommand("sp_CreateAccount", con))
+                        {
+                            cmd.CommandType = CommandType.StoredProcedure;
+                            cmd.Parameters.AddWithValue("@CustomerId", customerId);
+                            string accNumber = "ACC-" + new Random().Next(10000, 99999).ToString();
+                            cmd.Parameters.AddWithValue("@AccountNumber", accNumber);
+                            cmd.Parameters.AddWithValue("@AccountType", model.AccountType);
+                            cmd.Parameters.AddWithValue("@InitialBalance", 0); // Open with 0, then deposit for audit
+                            
+                            using (SqlDataReader reader = cmd.ExecuteReader())
+                            {
+                                if (reader.Read())
+                                {
+                                    accountId = Convert.ToInt32(reader["AccountId"]);
+                                }
+                            }
+                        }
+
+                        if (model.InitialBalance > 0 && accountId > 0)
+                        {
+                            using (SqlCommand cmd = new SqlCommand("sp_DepositMoney", con))
+                            {
+                                cmd.CommandType = CommandType.StoredProcedure;
+                                cmd.Parameters.AddWithValue("@AccountId", accountId);
+                                cmd.Parameters.AddWithValue("@Amount", model.InitialBalance);
+                                cmd.Parameters.AddWithValue("@Remarks", "Initial Deposit");
+                                cmd.ExecuteNonQuery();
+                            }
+                        }
+                    }
+                }
+
+                return RedirectToAction("Login");
+            }
+            catch (SqlException ex)
+            {
+                if (ex.Message.Contains("Username already exists"))
+                {
+                    ModelState.AddModelError("Username", "Username already exists.");
+                }
+                else
+                {
+                    ModelState.AddModelError("", "Database error: " + ex.Message);
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError("", "An error occurred: " + ex.Message);
+            }
         }
         return View(model);
     }

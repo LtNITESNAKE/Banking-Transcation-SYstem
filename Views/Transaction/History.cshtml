@@ -46,8 +46,8 @@
                                     <span class="badge" style="background-color:#6B4EFF;">Transfer</span>
                                 }
                             </td>
-                            <td class="fw-bold" style="color: @(item.TransactionType == "Deposit" ? "#23C16B" : item.TransactionType == "Withdrawal" ? "#000000" : "#6B4EFF")">
-                                @(item.TransactionType == "Withdrawal" ? "-" : "+")PKR @item.Amount.ToString("N2")
+                            <td class="fw-bold" style="color: @(item.IsDeduction ? "#000000" : "#23C16B")">
+                                @(item.IsDeduction ? "-" : "+")PKR @item.Amount.ToString("N2")
                             </td>
                             <td class="text-muted">@item.Remarks</td>
                         </tr>

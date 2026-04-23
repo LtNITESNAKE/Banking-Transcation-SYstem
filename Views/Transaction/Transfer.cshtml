@@ -21,6 +21,7 @@
                     <div class="mb-3">
                         <label asp-for="AccountNumber" class="form-label fw-bold">From Account Number (Sender)</label>
                         <input asp-for="AccountNumber" class="form-control" placeholder="e.g. ACC-10023" />
+                        <div id="senderNameResult" class="form-text mt-1"></div>
                         <span asp-validation-for="AccountNumber" class="text-danger"></span>
                     </div>
 
@@ -31,6 +32,7 @@
                     <div class="mb-3">
                         <label asp-for="ReceiverAccountNumber" class="form-label fw-bold">To Account Number (Receiver)</label>
                         <input asp-for="ReceiverAccountNumber" class="form-control" placeholder="e.g. ACC-10024" />
+                        <div id="receiverNameResult" class="form-text mt-1"></div>
                         <span asp-validation-for="ReceiverAccountNumber" class="text-danger"></span>
                     </div>
 
@@ -56,4 +58,37 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            $('#AccountNumber').on('blur', function() {
+                var accNum = $(this).val();
+                if(accNum) {
+                    $.get('/Transaction/GetAccountName', { accountNumber: accNum }, function(data) {
+                        if(data.success) {
+                            $('#senderNameResult').removeClass('text-danger').addClass('text-success fw-bold').text('Sender: ' + data.name);
+                        } else {
+                            $('#senderNameResult').removeClass('text-success fw-bold').addClass('text-danger').text('Account not found.');
+                        }
+                    });
+                } else {
+                    $('#senderNameResult').text('');
+                }
+            });
+
+            $('#ReceiverAccountNumber').on('blur', function() {
+                var accNum = $(this).val();
+                if(accNum) {
+                    $.get('/Transaction/GetAccountName', { accountNumber: accNum }, function(data) {
+                        if(data.success) {
+                            $('#receiverNameResult').removeClass('text-danger').addClass('text-success fw-bold').text('Receiver: ' + data.name);
+                        } else {
+                            $('#receiverNameResult').removeClass('text-success fw-bold').addClass('text-danger').text('Account not found.');
+                        }
+                    });
+                } else {
+                    $('#receiverNameResult').text('');
+                }
+            });
+        });
+    </script>
 }

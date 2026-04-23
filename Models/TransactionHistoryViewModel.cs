@@ -19,6 +19,8 @@ public class TransactionHistoryViewModel
     [DataType(DataType.Currency)]
     public decimal Amount { get; set; }
 
+    public bool IsDeduction { get; set; }
+
     public string? Remarks { get; set; }
 }
 

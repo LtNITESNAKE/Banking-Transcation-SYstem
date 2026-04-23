@@ -21,6 +21,7 @@
                     <div class="mb-3">
                         <label asp-for="AccountNumber" class="form-label fw-bold">Account Number</label>
                         <input asp-for="AccountNumber" class="form-control" placeholder="e.g. ACC-10023" />
+                        <div id="accountNameResult" class="form-text mt-1"></div>
                         <span asp-validation-for="AccountNumber" class="text-danger"></span>
                     </div>
 
@@ -46,4 +47,22 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        $(document).ready(function() {
+            $('#AccountNumber').on('blur', function() {
+                var accNum = $(this).val();
+                if(accNum) {
+                    $.get('/Transaction/GetAccountName', { accountNumber: accNum }, function(data) {
+                        if(data.success) {
+                            $('#accountNameResult').removeClass('text-danger').addClass('text-success fw-bold').text('Account Holder: ' + data.name);
+                        } else {
+                            $('#accountNameResult').removeClass('text-success fw-bold').addClass('text-danger').text('Account not found.');
+                        }
+                    });
+                } else {
+                    $('#accountNameResult').text('');
+                }
+            });
+        });
+    </script>
 }
