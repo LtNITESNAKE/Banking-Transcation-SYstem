@@ -11,16 +11,21 @@
         body {
             background-color: #F6F8F9;
             font-family: 'Outfit', sans-serif;
+            margin: 0;
+        }
+        .main-wrapper {
             display: flex;
             align-items: center;
             justify-content: center;
             min-height: 100vh;
-            margin: 0;
+            width: 100%;
+            padding: 20px 0;
         }
         .auth-container {
             width: 100%;
             max-width: 400px;
             padding: 15px;
+            z-index: 10;
         }
         .auth-card {
             background: #ffffff;
@@ -87,11 +92,26 @@
         .auth-links a:hover {
             text-decoration: underline;
         }
+        /* Hide Somee Ads */
+        div[style*="position: fixed; z-index: 2147483647"], 
+        div[style*="position:fixed;z-index:2147483647"],
+        center > a[href*="somee.com"],
+        body > div:last-child,
+        #somee_ad_container {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            height: 0 !important;
+            width: 0 !important;
+            overflow: hidden !important;
+        }
     </style>
 </head>
 <body>
-    <div class="auth-container">
-        @RenderBody()
+    <div class="main-wrapper">
+        <div class="auth-container">
+            @RenderBody()
+        </div>
     </div>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

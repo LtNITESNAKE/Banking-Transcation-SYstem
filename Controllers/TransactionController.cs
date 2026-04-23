@@ -16,6 +16,30 @@ public class TransactionController : Controller
         _connectionString = configuration.GetConnectionString("DefaultConnection") ?? "";
     }
 
+    private bool IsUserAccount(int accountId)
+    {
+        var role = HttpContext.Session.GetString("Role");
+        if (role == "Admin") return true;
+
+        var username = HttpContext.Session.GetString("Username");
+        if (string.IsNullOrEmpty(username)) return false;
+
+        using (SqlConnection con = new SqlConnection(_connectionString))
+        {
+            using (SqlCommand cmd = new SqlCommand(@"
+                SELECT 1 FROM Accounts a
+                JOIN Customers c ON a.CustomerId = c.CustomerId
+                JOIN Users u ON c.UserId = u.UserId
+                WHERE a.AccountId = @AccountId AND u.Username = @Username", con))
+            {
+                cmd.Parameters.AddWithValue("@AccountId", accountId);
+                cmd.Parameters.AddWithValue("@Username", username);
+                con.Open();
+                return cmd.ExecuteScalar() != null;
+            }
+        }
+    }
+
     private int GetAccountIdByNumber(string accountNumber)
     {
         int accountId = 0;
@@ -120,6 +144,13 @@ public class TransactionController : Controller
                 return View(model);
             }
 
+            // Security Check: Ensure account belongs to user
+            if (!IsUserAccount(accountId))
+            {
+                ModelState.AddModelError("AccountNumber", "You can only withdraw from your own account.");
+                return View(model);
+            }
+
             try
             {
                 using (SqlConnection con = new SqlConnection(_connectionString))
@@ -168,6 +199,19 @@ public class TransactionController : Controller
             if (toAccountId == 0)
             {
                 ModelState.AddModelError("ReceiverAccountNumber", "Invalid target Account Number.");
+                return View(model);
+            }
+
+            // Security Check: Ensure source account belongs to user
+            if (!IsUserAccount(fromAccountId))
+            {
+                ModelState.AddModelError("AccountNumber", "You can only transfer from your own account.");
+                return View(model);
+            }
+
+            if (fromAccountId == toAccountId)
+            {
+                ModelState.AddModelError("ReceiverAccountNumber", "You cannot transfer to the same account.");
                 return View(model);
             }
 
