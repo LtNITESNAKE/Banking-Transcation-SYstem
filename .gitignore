@@ -41,3 +41,4 @@ appsettings.json
 # Mac OS files
 .DS_Store
 BankingDatabase_Simplified.sql
+Models/account_vie.cs
