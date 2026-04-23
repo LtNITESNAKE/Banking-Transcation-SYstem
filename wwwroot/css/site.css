@@ -23,6 +23,23 @@ body {
     height: 100vh;
     box-shadow: 4px 0 10px rgba(0,0,0,0.1);
     z-index: 100;
+    overflow-y: auto; /* Added scrollbar */
+    padding-bottom: 80px; /* Space for Somee ad banner */
+}
+
+/* Custom Scrollbar for Sidebar */
+.sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+.sidebar::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1); 
+}
+.sidebar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3); 
+    border-radius: 10px;
+}
+.sidebar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5); 
 }
 
 .sidebar-header {
@@ -55,6 +72,7 @@ body {
 .sidebar-footer {
     padding: 20px 25px;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+    margin-top: auto;
 }
 
 .user-avatar {
@@ -76,6 +94,52 @@ body {
     padding: 40px;
     background-color: #F6F8F9;
     min-height: 100vh;
+}
+
+/* Responsive Design for Mobile */
+@media (max-width: 768px) {
+    .app-container {
+        flex-direction: column;
+    }
+    .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        min-height: auto;
+        padding-bottom: 20px;
+        overflow-y: visible;
+    }
+    .sidebar-header {
+        justify-content: center;
+        padding: 20px;
+    }
+    .sidebar-nav {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 0 10px;
+    }
+    .sidebar-nav .nav-link {
+        padding: 10px 15px;
+        border-left: none;
+        border-bottom: 4px solid transparent;
+        text-align: center;
+    }
+    .sidebar-nav .nav-link:hover, .sidebar-nav .nav-link.active {
+        border-left: none;
+        border-bottom: 4px solid #fff;
+    }
+    .sidebar-footer {
+        display: flex;
+        justify-content: center;
+        border-top: none;
+        padding: 10px;
+        margin-top: 10px;
+    }
+    .main-content {
+        margin-left: 0;
+        padding: 20px;
+    }
 }
 
 /* Welcome Card */

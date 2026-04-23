@@ -1,7 +1,11 @@
-# Week 2 Task: Database Design Document
+# Week 2 Task: Database Design & Implementation
+**Project Name:** Banking Transaction System
+**Course:** Advanced Database Management Systems (ADBMS)
 
 ## 1. Introduction
-This document outlines the comprehensive database design for the **Banking Transaction System**. The database is designed to securely handle user authentication, customer profiles, account management, and transaction tracking. The implementation is done using Microsoft SQL Server and adheres strictly to robust banking constraints (including soft-deletes, double-entry audit ledgers, and transaction atomicity).
+This document outlines the comprehensive database design for the **Banking Transaction System**. The database is designed to securely handle user authentication, customer profiles, account management, and transaction tracking. The implementation is done using Microsoft SQL Server and strictly adheres to robust banking constraints, data normalization, and ACID properties.
+
+---
 
 ## 2. Entity-Relationship Diagram (ERD)
 
@@ -14,107 +18,126 @@ erDiagram
 
     Users {
         INT UserId PK
-        NVARCHAR Username "UNIQUE"
-        NVARCHAR Password
-        NVARCHAR FullName
-        NVARCHAR Role "Admin / Customer"
-        BIT IsActive "Soft Delete Flag"
+        NVARCHAR Username "UNIQUE, NOT NULL"
+        NVARCHAR Password "NOT NULL"
+        NVARCHAR Role "CHECK: 'Admin', 'Customer'"
+        BIT IsActive "DEFAULT 1"
     }
     
     Customers {
         INT CustomerId PK
-        INT UserId FK
-        NVARCHAR FirstName
-        NVARCHAR LastName
+        INT UserId FK "NOT NULL"
+        NVARCHAR FirstName "NOT NULL"
         NVARCHAR Email
         NVARCHAR PhoneNumber
-        NVARCHAR Address
     }
     
     Accounts {
         INT AccountId PK
-        INT CustomerId FK
-        NVARCHAR AccountNumber "UNIQUE"
-        NVARCHAR AccountType "Savings / Checking"
-        DECIMAL Balance "Must be >= 0"
-        BIT IsActive "Soft Delete Flag"
+        INT CustomerId FK "NOT NULL"
+        NVARCHAR AccountNumber "UNIQUE, NOT NULL"
+        NVARCHAR AccountType "CHECK: 'Savings', 'Checking'"
+        DECIMAL Balance "CHECK: >= 0"
+        BIT IsActive "DEFAULT 1"
     }
     
     Transactions {
         INT TransactionId PK
-        INT AccountId FK "Sender/Main Account"
-        NVARCHAR TransactionType "Deposit/Withdrawal/Transfer"
-        DECIMAL Amount "> 0"
-        INT ReceiverAccountId FK "Optional, for Transfers"
-        NVARCHAR Remarks
-        DATETIME TransactionDate
+        INT AccountId FK "NOT NULL"
+        NVARCHAR TransactionType "CHECK: 'Deposit', 'Withdrawal', 'Transfer'"
+        DECIMAL Amount "CHECK: > 0"
+        INT ReceiverAccountId FK "NULLABLE"
+        DATETIME TransactionDate "DEFAULT GETDATE()"
     }
 ```
 
-## 3. Tables & Relationships
-The database consists of 4 main tables:
+---
 
-### Users Table
+## 3. Database Tables & Relationships (Primary & Foreign Keys)
+
+The database consists of 4 highly normalized tables.
+
+### 3.1. `Users` Table
 - **Purpose**: Manages system authentication, authorization, and soft-delete capabilities.
-- **Primary Key**: `UserId`
-- **Logic**: Stores username, password, full name, role (`Admin` or `Customer`), and an `IsActive` flag.
-- **Constraints**: 
-  - `Username` is `UNIQUE` and `NOT NULL`.
-  - `Role` has a `CHECK` constraint to only allow 'Admin' or 'Customer'.
-  - `IsActive` defaults to `1` (True).
+- **Primary Key**: `UserId` (IDENTITY 1,1)
 
-### Customers Table
+### 3.2. `Customers` Table
 - **Purpose**: Stores detailed profile information and contact details for customers.
-- **Primary Key**: `CustomerId`
-- **Foreign Key**: `UserId` referencing `Users(UserId)`.
-- **Logic**: Holds strictly required personal details: FirstName, LastName, Email, PhoneNumber, and Address. 
+- **Primary Key**: `CustomerId` (IDENTITY 1,1)
+- **Foreign Key**: `UserId` references `Users(UserId)`. This is a 1:1 relationship ensuring every customer has login credentials.
 
-### Accounts Table
-- **Purpose**: Stores bank account details and ledger balances for customers.
-- **Primary Key**: `AccountId`
-- **Foreign Key**: `CustomerId` referencing `Customers(CustomerId)`.
-- **Logic**: Tracks the auto-generated account number, type (Savings/Checking), the current exact balance, and an `IsActive` flag to support administrative soft-deletes.
-- **Constraints**:
-  - `AccountNumber` is `UNIQUE`.
-  - `AccountType` has a `CHECK` constraint ('Savings' or 'Checking').
+### 3.3. `Accounts` Table
+- **Purpose**: Stores bank account details and real-time ledger balances.
+- **Primary Key**: `AccountId` (IDENTITY 1,1)
+- **Foreign Key**: `CustomerId` references `Customers(CustomerId)`. This is a 1:N relationship allowing a customer to have multiple accounts.
 
-### Transactions Table
-- **Purpose**: Maintains a permanent, undeletable history of all financial transactions acting as an immutable audit trail.
-- **Primary Key**: `TransactionId`
+### 3.4. `Transactions` Table
+- **Purpose**: Maintains a permanent, undeletable history of all financial activities (Immutable Audit Trail).
+- **Primary Key**: `TransactionId` (IDENTITY 1,1)
 - **Foreign Keys**: 
-  - `AccountId` referencing `Accounts(AccountId)` (Primary Account / Sender).
-  - `ReceiverAccountId` referencing `Accounts(AccountId)` (Target Receiver, nullable).
-- **Logic**: Records the transaction type, exact amount, date, and any remarks provided by the user.
-- **Constraints**: 
-  - `TransactionType` has a `CHECK` constraint ('Deposit', 'Withdrawal', 'Transfer').
+  - `AccountId` references `Accounts(AccountId)` (Tracks the sender/initiator).
+  - `ReceiverAccountId` references `Accounts(AccountId)` (Tracks the receiver in a Transfer).
 
 ---
 
-## 4. Stored Procedures
-We have implemented fully transactional stored procedures to encapsulate business logic, prevent SQL injection, and guarantee data atomicity:
-- **`sp_UserLogin`**: Validates user credentials and ensures the user account `IsActive = 1`.
-- **`sp_CreateUser`**: Handles administrative and customer registration. It safely inserts data into both `Users` and `Customers` tables using `BEGIN TRANSACTION` and `COMMIT` to ensure both records are linked seamlessly.
-- **`sp_CreateAccount`**: Generates a new bank account tied to a specific customer profile.
-- **`sp_DepositMoney` & `sp_WithdrawMoney`**: Handles deposits and withdrawals while ensuring sufficient balance exists prior to any withdrawal. Both procedures immediately update the account balance and insert into the `Transactions` table inside a single atomic transaction.
-- **`sp_TransferMoney`**: Handles transferring money from a Sender to a Receiver. It enforces strict double-entry bookkeeping: it records one deduction record for the Sender (with a `ReceiverAccountId`), and one addition record for the Receiver.
+## 4. Applied Constraints (NOT NULL, UNIQUE, CHECK, DEFAULT)
+
+To ensure strict data integrity, the following constraints are actively enforced at the SQL database level:
+
+1. **NOT NULL Constraints**:
+   - Enforced on essential fields: `Users.Username`, `Users.Password`, `Customers.FirstName`, `Accounts.AccountNumber`, `Transactions.Amount`.
+2. **UNIQUE Constraints**:
+   - `Users.Username`: Prevents duplicate login IDs.
+   - `Accounts.AccountNumber`: Ensures no two bank accounts can have the same number.
+3. **CHECK Constraints**:
+   - **Role Validation**: `Users.Role` must be either `'Admin'` or `'Customer'`.
+   - **Account Types**: `Accounts.AccountType` must be either `'Savings'` or `'Checking'`.
+   - **Transaction Types**: `Transactions.TransactionType` must be `'Deposit'`, `'Withdrawal'`, or `'Transfer'`.
+   - **Financial Integrity**: `Accounts.Balance >= 0` ensures accounts cannot be overdrawn without authorization.
+4. **DEFAULT Constraints**:
+   - `Users.IsActive` and `Accounts.IsActive` default to `1` (True).
+   - `Transactions.TransactionDate` defaults to `GETDATE()`.
 
 ---
 
-## 5. Functions
-- Built-in system functions like `GETDATE()` are used heavily as default constraints to timestamp record creations (e.g., `TransactionDate`).
-- **`SCOPE_IDENTITY()`**: Highly utilized within `sp_CreateUser` and `sp_CreateAccount` to instantly capture primary keys generated from `INSERT` statements, enabling immediate execution of dependent inserts (like inserting a `Customer` immediately after a `User`).
+## 5. Stored Procedures (Insert, Update, Delete)
+
+We implemented fully transactional stored procedures to encapsulate business logic, prevent SQL injection, and guarantee data atomicity (using `BEGIN TRANSACTION` and `COMMIT`):
+
+1. **`sp_UserLogin` (Read)**: Validates user credentials securely.
+2. **`sp_CreateUser` (Insert)**: A highly complex procedure that inserts into both `Users` and `Customers` tables in a single atomic transaction.
+3. **`sp_CreateAccount` (Insert)**: Generates a new bank account tied to a specific customer profile.
+4. **`sp_DepositMoney` (Update/Insert)**: Updates the `Accounts` balance and simultaneously Inserts a log into `Transactions`.
+5. **`sp_WithdrawMoney` (Update/Insert)**: Ensures sufficient balance exists, deducts the balance, and logs the withdrawal.
+6. **`sp_TransferMoney` (Update/Insert)**: Handles transferring money from a Sender to a Receiver. It enforces strict double-entry bookkeeping by updating two different accounts and recording the exact transaction details.
+7. **`sp_SoftDeleteUser` (Update)**: Instead of a dangerous hard delete, this acts as our safe "Delete" procedure by updating the `IsActive` flag to `0`, preserving audit trails.
 
 ---
 
-## 6. Triggers for Automatic Actions
-Triggers are implemented directly on the database tables to enforce strict, unbypassable security rules:
-- **`tr_UpdateAccountModifiedDate`**: (`AFTER UPDATE`) Automatically updates a backend modified timestamp on the `Accounts` table whenever balances change.
-- **`tr_ValidateTransactionAmount`**: (`INSTEAD OF INSERT`) Completely intercepts any new transaction. If the transaction `Amount <= 0`, it instantly triggers a `ROLLBACK` and throws an error, preventing zero or negative transactions.
-- **`tr_PreventTransactionDeletion`**: (`INSTEAD OF DELETE`) A critical security feature. It outright rejects any `DELETE` queries executed against the `Transactions` table, guaranteeing that financial histories can never be erased or tampered with.
+## 6. Implemented Functions
+
+The system makes use of essential built-in and logical functions to maintain state:
+1. **`GETDATE()`**: Used dynamically as a default constraint and inside stored procedures to securely timestamp when transactions occur without relying on the front-end application's clock.
+2. **`SCOPE_IDENTITY()`**: A critical transactional function heavily utilized within `sp_CreateUser` and `sp_CreateAccount`. It instantly captures the Primary Key generated from the previous `INSERT` statement so it can be seamlessly used as a Foreign Key in the very next `INSERT` statement within the same transaction.
+3. **`ISNULL(SUM(Balance), 0)`**: An aggregation function used to calculate total bank capital dynamically.
 
 ---
 
-## 7. Business Logic in Simple Words
-1. **Registration & Initial Deposit**: When a user registers (or an Admin creates one), the system securely sets up their `User` login and `Customer` profile. It then immediately establishes their first `Account` and optionally fires a `Deposit` transaction to record their initial starting balance.
-2. **Double-Entry Ledgers**: When users transfer money, the Sender's balance decreases and the Receiver's balance increases. Admins view both sides of the ledger (seeing precisely where money left and where it arrived), while customers only view transactions relevant specifically to their own accounts.
-3. **Soft-Deletions**: Financial institutions never hard-delete records. When an Admin "deletes" a customer, the system simply updates the `IsActive` flag to `0` for both the `User` and `Account` rows. This instantly revokes login access and hides them from the dashboard while preserving their financial transaction history intact forever.
+## 7. Triggers for Automatic Actions
+
+Triggers are implemented directly on the database tables to enforce strict, unbypassable security rules that fire automatically in the background:
+
+1. **`tr_ValidateTransactionAmount` (`INSTEAD OF INSERT`)**:
+   - **Logic**: Automatically intercepts any incoming transaction. If the transaction `Amount <= 0`, it instantly triggers a `ROLLBACK` and throws an error, preventing negative financial injections.
+2. **`tr_PreventTransactionDeletion` (`INSTEAD OF DELETE`)**:
+   - **Logic**: A critical security feature for auditing. It automatically rejects any `DELETE` queries executed against the `Transactions` table, guaranteeing that financial histories are immutable and can never be erased or tampered with by any user or administrator.
+3. **`tr_UpdateAccountModifiedDate` (`AFTER UPDATE`)**:
+   - **Logic**: Automatically fires whenever a bank balance changes to stamp the row with the exact time of modification for security monitoring.
+
+---
+
+## 8. Business Logic (Simple Explanation)
+
+- **Registration Flow**: When an Admin creates a user, the system sets up their login (`Users`), creates their profile (`Customers`), gives them an `Account`, and records a `Deposit` for their starting balance.
+- **Double-Entry Ledgers**: When transferring money, the system automatically subtracts from the sender and adds to the receiver simultaneously. If one fails, the other is rolled back instantly so money is never "lost" in the void.
+- **Security & Deletion**: Financial systems never delete data. When an Admin "deletes" a customer, the system actually uses a "Soft Delete". It updates the `IsActive` column to `0`. This revokes their ability to log in and hides them from the dashboard, but keeps all their financial history permanently safely stored in the database for legal auditing.

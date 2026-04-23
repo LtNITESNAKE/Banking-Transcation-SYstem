@@ -64,7 +64,7 @@ public class HomeController : Controller
                     FROM Accounts a
                     JOIN Customers c ON a.CustomerId = c.CustomerId
                     JOIN Users u ON c.UserId = u.UserId
-                    WHERE u.Username = @Username", con))
+                    WHERE u.Username = @Username AND a.IsActive = 1", con))
                 {
                     cmd.Parameters.AddWithValue("@Username", username);
                     totalBalance = (decimal)cmd.ExecuteScalar();
@@ -80,6 +80,24 @@ public class HomeController : Controller
                 {
                     cmd.Parameters.AddWithValue("@Username", username);
                     totalTransactions = (int)cmd.ExecuteScalar();
+                }
+
+                using (SqlCommand cmd = new SqlCommand(@"
+                    SELECT a.AccountNumber, a.AccountType
+                    FROM Accounts a
+                    JOIN Customers c ON a.CustomerId = c.CustomerId
+                    JOIN Users u ON c.UserId = u.UserId
+                    WHERE u.Username = @Username AND a.IsActive = 1", con))
+                {
+                    cmd.Parameters.AddWithValue("@Username", username);
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            ViewBag.AccountNumber = reader["AccountNumber"].ToString();
+                            ViewBag.AccountType = reader["AccountType"].ToString();
+                        }
+                    }
                 }
             }
         }

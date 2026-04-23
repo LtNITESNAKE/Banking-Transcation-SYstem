@@ -12,6 +12,27 @@
     </p>
 </div>
 
+@if (role == "Customer" && ViewBag.AccountNumber != null)
+{
+    <div class="card mb-4 p-4" style="border-left: 5px solid #6B4EFF; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff;">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <p class="text-muted mb-1" style="color: #aaa !important; font-size: 0.85rem; letter-spacing: 1px; text-transform: uppercase;">Your Account Number</p>
+                <h3 class="fw-bold mb-0" style="font-size: 1.8rem; letter-spacing: 2px; color: #fff;">@ViewBag.AccountNumber</h3>
+                <span class="badge mt-2" style="background: #6B4EFF; font-size: 0.8rem;">@ViewBag.AccountType Account</span>
+            </div>
+            <div style="font-size: 3.5rem; color: #6B4EFF; opacity: 0.6;">
+                <i class="bi bi-credit-card-2-front-fill"></i>
+            </div>
+        </div>
+        <hr style="border-color: rgba(255,255,255,0.15);" />
+        <p class="mb-0" style="color: #aaa; font-size: 0.85rem;">
+            <i class="bi bi-info-circle me-1"></i>
+            Use this account number when sending or receiving transfers.
+        </p>
+    </div>
+}
+
 <div class="row">
     @if (role == "Admin")
     {
@@ -35,12 +56,14 @@
         </div>
     </div>
     <div class="col-md-4 mb-3">
-        <div class="card text-center p-4">
-            <div style="font-size: 2.5rem; color: #FFB323;">
-                <i class="bi bi-arrow-left-right"></i>
+        <a asp-controller="Transaction" asp-action="History" class="text-decoration-none text-dark">
+            <div class="card text-center p-4" style="transition: transform 0.2s, box-shadow 0.2s; cursor: pointer;" onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 10px 20px rgba(0,0,0,0.1)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 0.125rem 0.25rem rgba(0,0,0,0.075)';">
+                <div style="font-size: 2.5rem; color: #FFB323;">
+                    <i class="bi bi-arrow-left-right"></i>
+                </div>
+                <h5 class="mt-2 fw-bold">@ViewBag.TotalTransactions</h5>
+                <p class="text-muted mb-0">Total Transactions <i class="bi bi-arrow-right-circle ms-1"></i></p>
             </div>
-            <h5 class="mt-2 fw-bold">@ViewBag.TotalTransactions</h5>
-            <p class="text-muted mb-0">Total Transactions</p>
-        </div>
+        </a>
     </div>
 </div>
