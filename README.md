@@ -1,6 +1,6 @@
 <div align="center">
   
-# 🏦 Premium Banking Transaction System
+# 🏦 Banking Transaction System
   
 **A Full-Stack Enterprise-Level Web Application built with ASP.NET Core MVC & Microsoft SQL Server.**
 
